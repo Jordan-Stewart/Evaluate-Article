@@ -1,8 +1,6 @@
-// Setup empty JS object to act as endpoint for all routes
-projectData = {};
-
 const path = require('path')
 const express = require('express')
+const mockAPIResponse = require('./mockAPI.js')
 const cors = require('cors')
 const fetch = require('node-fetch')
 const bodyParser = require('body-parser')
@@ -12,51 +10,34 @@ dotenv.config();
 
 const app = express()
 
+console.log(`Your API key is ${process.env.API_KEY}`);
+
 app.use(express.static('dist'))
 app.use(cors())
 app.use(bodyParser.json())
 
-//console.log('Geonames username is ${genonames_id}, Weatherbit API key is ${weatherbit_id}, and Pixabay API key is ${pixabay_id}`);
+console.log(__dirname)
 
-// MIDDLEWARE
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+// designates what port the app will listen to for incoming requests - instructed by mentor: https://knowledge.udacity.com/questions/642781
+app.listen(8081, function () {
+    console.log('Example app listening on port 8081')
+})
 
-// DECLARING THE PORT
-const port = 8081;
-const server = app.listen(port, () => {
-    //log text in console for evidence that servers are working
-    console.log ("server is running");
-    console.log (`running on localhost: ${port}`);
-});
-
-//generate dist file location
-app.get('/', function (req, res) {
+app.get('/clientdataUrl', function (req, res) {
     // res.sendFile('dist/index.html')
     res.sendFile('dist/index.html')
-});
+})
 
-app.get('/all', (req, res) => {
-    res.send(projectData);
-    console.log(projectData);
-});
-
-app.post('/add', (req, res) => {
-  travelData = {
-    destinationLattitude: req.body.destinationLattitude,
-    destinationLongitude: req.body.destinationLongitude,
-    destinationCountry: req.body.destinationCountry,
-    destinationLow_temp: req.body.destinationLow_temp,
-    destinationLow_temp: req.body.destinationHigh_temp,
-    weatherDescription: req.body.weatherDescription,
-    destinationImage: req.body.destinationImage,
-  };
-
-  projectData = travelData;
-  res.send(projectData);
-
-  //testing
-  console.log(projectData);
-});
-
-module.exports = app;
+//assistance provided for this function from mentor - https://knowledge.udacity.com/questions/641239
+app.post("/clientdataUrl", async function (req, res) {
+    console.log('req====+>', req.body)
+    const result = await fetch("https://api.meaningcloud.com/sentiment-2.1?key=" + process.env.API_KEY + "&url=" + req.body.formText + "&lang=en")
+    try {
+        console.log(result)
+        const response = await result.json();
+        res.send(response)
+        console.log(response)
+    } catch (error) {
+        console.log("error", error);
+    }
+})
